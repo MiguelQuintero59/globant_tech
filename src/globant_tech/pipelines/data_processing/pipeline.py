@@ -1,14 +1,21 @@
 from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import execute_sql
 
-# def create_pipeline(**kwargs) -> Pipeline:
-#     return pipeline(
-#         [
-#             node(
-#                 func=execute_sql,
-#                 inputs='jobs_quarter_query',
-#                 outputs='department_jobs_number',
-#                 name="execute_sql_jobs"
-#             ),
-#         ]
-#     )
+def create_pipeline(**kwargs) -> Pipeline:
+    return pipeline(
+        [
+            node(
+                func=execute_sql,
+                inputs='jobs_quarter_query',
+                outputs='department_jobs_number',
+                name="execute_sql_jobs"
+            ),
+
+            node(
+                func=execute_sql,
+                inputs='hired_employees',
+                outputs='hired_employees_table',
+                name="hired_employees_table"
+            ),
+        ]
+    )

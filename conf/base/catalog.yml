@@ -150,3 +150,59 @@ department_jobs_number:
   layer: processing
   save_args:
     if_exists: replace
+
+hired_employees:
+  <<: *query_dataset
+  layer: processing
+  sql: |
+    WITH hired_employees_call AS (
+      SELECT * 
+      FROM `globant-technical-01.data_ingestion.hired_employees` 
+      WHERE _timestamp = (SELECT MAX(_timestamp) FROM `globant-technical-01.data_ingestion.hired_employees`)
+    ),
+    
+    hired_avg AS (
+      SELECT 
+        year,
+        ROUND(AVG(hired_mothly),2) hired_mean
+      FROM (
+        SELECT 
+          EXTRACT(YEAR FROM CAST(datetime AS TIMESTAMP)) year,
+          EXTRACT(MONTH FROM CAST(datetime AS TIMESTAMP)) month,
+          count(id) hired_mothly
+        FROM hired_employees_call
+        GROUP BY 1,2
+        ORDER BY 1,2
+      )
+      WHERE year = 2021
+      GROUP BY 1
+    ),
+    
+    hired_threshold AS (
+      SELECT 
+        department_id,
+        count(id) hired
+      FROM hired_employees_call
+      GROUP BY 1
+      HAVING hired >  CAST((SELECT hired_mean FROM hired_avg) AS INT64)
+    )
+    
+    SELECT 
+      department_id AS id,
+      department,
+      hired
+    FROM hired_threshold ht
+    LEFT JOIN (
+                SELECT 
+                    * 
+                FROM `globant-technical-01.data_ingestion.departments` 
+                WHERE _timestamp = (SELECT MAX(_timestamp) FROM `globant-technical-01.data_ingestion.departments`)) dpts ON dpts.id = ht.department_id
+    ORDER BY hired DESC
+
+hired_employees_table:
+  <<: *table_dataset
+  dataset: data_processing
+  table_name: hired_employees_threshold
+  layer: processing
+  save_args:
+    if_exists: replace
