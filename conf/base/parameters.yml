@@ -1,0 +1,6 @@
+general:
+  urls:
+    gdrive:
+      hired_employees: "https://drive.google.com/file/d/1CHWAh4KQ3Mq9AJdY6a9mTSIn7HjYUtEY/view"
+      departments: "https://drive.google.com/file/d/1NQVv42-suyaMeX5I-MnceMRS_Px2cBe3/view"
+      jobs: "https://drive.google.com/file/d/11xzthHdCJrrb-JfgtsgzntW_T5m4m3cv/view"

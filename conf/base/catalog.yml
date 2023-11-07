@@ -1,0 +1,132 @@
+_table_dataset: &table_dataset
+  type: extras.datasets.GBQTokenTableDataSet
+  project: "globant-technical-01"
+  credentials: gbq-creds
+
+_query_dataset: &query_dataset
+  type: extras.datasets.GBQTokenQueryDataSet
+  project: "globant-technical-01"
+  layer: processing
+  credentials: gbq-creds
+
+_hired_employees: &hired_employees_dataset
+  <<: *table_dataset
+  dataset: data_ingestion
+  table_name: hired_employees
+  layer: raw
+  save_args:
+    if_exists: append
+
+_departments: &departments_dataset
+  <<: *table_dataset
+  dataset: data_ingestion
+  table_name: departments
+  layer: raw
+  save_args:
+    if_exists: append
+
+_jobs: &jobs_dataset
+  <<: *table_dataset
+  dataset: data_ingestion
+  table_name: jobs
+  layer: raw
+  save_args:
+    if_exists: append
+
+raw_departments:
+  type: pandas.ExcelDataSet
+  filepath: data/01_raw/departments.xlsx
+  layer: raw
+  load_args:
+    header:
+    names: ['id','department']
+
+raw_hired_employees:
+  type: pandas.ExcelDataSet
+  filepath: data/01_raw/hired_employees.xlsx
+  layer: raw
+  load_args:
+    header:
+    names: [ 'id','name','datetime','department_id','job_id' ]
+
+raw_jobs:
+  type: pandas.ExcelDataSet
+  filepath: data/01_raw/jobs.xlsx
+  layer: raw
+  load_args:
+    header:
+    names: ['id','job']
+
+hired_employees_db:
+  <<: *hired_employees_dataset
+
+departments_db:
+  <<: *departments_dataset
+
+jobs_db:
+  <<: *jobs_dataset
+
+hired_employees_bck:
+  <<: *hired_employees_dataset
+
+departments_bck:
+  <<: *departments_dataset
+
+jobs_bck:
+  <<: *jobs_dataset
+
+jobs_quarter:
+  <<: *query_dataset
+  layer: processing
+  sql: |
+    WITH main_filter AS (
+      SELECT
+        *,
+        MAX(_timestamp) OVER (PARTITION BY id,name,datetime ORDER BY datetime) filter_timestamp
+      FROM `globant-technical-01.data_ingestion.hired_employees` 
+      QUALIFY _timestamp = filter_timestamp
+      AND EXTRACT(YEAR FROM CAST(datetime AS TIMESTAMP)) = 2021
+    ),
+
+    job_ids AS (
+      SELECT
+        EXTRACT(QUARTER FROM CAST(datetime AS TIMESTAMP)) quarter,
+        department_id,
+        job_id,
+        count(id) n_jobs
+      FROM main_filter
+      GROUP BY 1,2,3
+    ),
+
+    departments AS (
+      SELECT 
+        * 
+      FROM `globant-technical-01.data_ingestion.departments` 
+      WHERE _timestamp = (SELECT MAX(_timestamp) FROM `globant-technical-01.data_ingestion.departments`)
+    ),
+
+    jobs AS (
+      SELECT 
+        * 
+      FROM `globant-technical-01.data_ingestion.jobs` 
+      WHERE _timestamp = (SELECT MAX(_timestamp) FROM `globant-technical-01.data_ingestion.jobs`)
+    )
+
+    SELECT 
+      quarter,
+      dpts.department dpts_name,
+      jobs.job job_name,
+      n_jobs
+    FROM job_ids ji
+    LEFT JOIN departments dpts ON dpts.id = ji.department_id
+    LEFT JOIN jobs ON jobs.id = ji.job_id
+    ORDER BY quarter,n_jobs DESC
+  
+
+department_jobs_number:
+  <<: *table_dataset
+  dataset: data_processing
+  table_name: jobs_department
+  layer: processing
+  save_args:
+    if_exists: replace
