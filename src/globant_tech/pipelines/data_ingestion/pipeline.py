@@ -9,26 +9,26 @@ from .nodes import load_csv_file, ingest_data, fetch_tables_spreadsheet
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline(
         [
-            # node(
-            #     func=load_csv_file,
-            #     inputs='raw_hired_employees',
-            #     outputs='hired_employees_raw',
-            #     name="load_hired_employees"
-            # ),
-            #
-            # node(
-            #     func=load_csv_file,
-            #     inputs='raw_departments',
-            #     outputs='departments_raw',
-            #     name="load_departments"
-            # ),
-            #
-            # node(
-            #     func=load_csv_file,
-            #     inputs='raw_jobs',
-            #     outputs='jobs_raw',
-            #     name="load_jobs"
-            # ),
+            node(
+                func=load_csv_file,
+                inputs='raw_hired_employees',
+                outputs='hired_employees_raw',
+                name="load_hired_employees"
+            ),
+
+            node(
+                func=load_csv_file,
+                inputs='raw_departments',
+                outputs='departments_raw',
+                name="load_departments"
+            ),
+
+            node(
+                func=load_csv_file,
+                inputs='raw_jobs',
+                outputs='jobs_raw',
+                name="load_jobs"
+            ),
 
             node(
                 func=ingest_data,
@@ -46,8 +46,8 @@ def create_pipeline(**kwargs) -> Pipeline:
 
             node(
                 func=ingest_data,
-                inputs='raw_jobs',
-                outputs='jobs_raw',
+                inputs='jobs_raw',
+                outputs='jobs_db',
                 name="fetch_jobs"
             ),
 

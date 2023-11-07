@@ -33,6 +33,14 @@ _jobs: &jobs_dataset
   save_args:
     if_exists: append
 
+_gcs_storage: &gcs_storage
+  type: pandas.CSVDataSet
+  versioned: true
+  layer: raw
+  fs_args:
+    project: "globant-technical-01"
+  credentials: gcs-creds
+
 raw_hired_employees:
   type: pandas.ExcelDataSet
   filepath: data/01_raw/hired_employees.xlsx
@@ -58,12 +66,16 @@ raw_jobs:
     names: ['id','job']
 
 hired_employees_raw:
-  type: text.TextDataSet
-  filepath: "gs://globant-tech/raw/hired_employees/hired_employees.avro"
-  versioned: true
-  layer: raw
-  fs_args:
-    project: "globant-technical-01"
+  <<: *gcs_storage
+  filepath: "gs://globant-tech/raw/hired_employees/hired_employees.csv"
+
+departments_raw:
+  <<: *gcs_storage
+  filepath: "gs://globant-tech/raw/departments/departments.csv"
+
+jobs_raw:
+  <<: *gcs_storage
+  filepath: "gs://globant-tech/raw/jobs/jobs.csv"
 
 hired_employees_db:
   <<: *hired_employees_dataset
