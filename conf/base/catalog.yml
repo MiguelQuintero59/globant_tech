@@ -33,14 +33,6 @@ _jobs: &jobs_dataset
   save_args:
     if_exists: append
 
-raw_departments:
-  type: pandas.ExcelDataSet
-  filepath: data/01_raw/departments.xlsx
-  layer: raw
-  load_args:
-    header:
-    names: ['id','department']
-
 raw_hired_employees:
   type: pandas.ExcelDataSet
   filepath: data/01_raw/hired_employees.xlsx
@@ -49,6 +41,14 @@ raw_hired_employees:
     header:
     names: [ 'id','name','datetime','department_id','job_id' ]
 
+raw_departments:
+  type: pandas.ExcelDataSet
+  filepath: data/01_raw/departments.xlsx
+  layer: raw
+  load_args:
+    header:
+    names: ['id','department']
+
 raw_jobs:
   type: pandas.ExcelDataSet
   filepath: data/01_raw/jobs.xlsx
@@ -56,6 +56,14 @@ raw_jobs:
   load_args:
     header:
     names: ['id','job']
+
+hired_employees_raw:
+  type: text.TextDataSet
+  filepath: "gs://globant-tech/raw/hired_employees/hired_employees.avro"
+  versioned: true
+  layer: raw
+  fs_args:
+    project: "globant-technical-01"
 
 hired_employees_db:
   <<: *hired_employees_dataset

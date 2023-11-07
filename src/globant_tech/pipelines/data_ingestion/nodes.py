@@ -9,7 +9,10 @@ from .utils import apply_schema
 from .schemas import HiredEmployees, Departments, Jobs
 logger = logging.getLogger(__name__)
 
-def read_csv_file(df):
+def load_csv_file(df):
+     return df
+
+def ingest_data(df):
      df['_timestamp'] = datetime.datetime.now()
      return df
 
