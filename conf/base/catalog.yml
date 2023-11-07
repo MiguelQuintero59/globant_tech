@@ -33,13 +33,13 @@ _jobs: &jobs_dataset
   save_args:
     if_exists: append
 
-raw_departments:
-  type: pandas.ExcelDataSet
-  filepath: data/01_raw/departments.xlsx
+_gcs_storage: &gcs_storage
+  type: pandas.CSVDataSet
+  versioned: true
   layer: raw
-  load_args:
-    header:
-    names: ['id','department']
+  fs_args:
+    project: "globant-technical-01"
+  credentials: gcs-creds
 
 raw_hired_employees:
   type: pandas.ExcelDataSet
@@ -49,6 +49,14 @@ raw_hired_employees:
     header:
     names: [ 'id','name','datetime','department_id','job_id' ]
 
+raw_departments:
+  type: pandas.ExcelDataSet
+  filepath: data/01_raw/departments.xlsx
+  layer: raw
+  load_args:
+    header:
+    names: ['id','department']
+
 raw_jobs:
   type: pandas.ExcelDataSet
   filepath: data/01_raw/jobs.xlsx
@@ -56,6 +64,18 @@ raw_jobs:
   load_args:
     header:
     names: ['id','job']
+
+hired_employees_raw:
+  <<: *gcs_storage
+  filepath: "gs://globant-tech/raw/hired_employees/hired_employees.csv"
+
+departments_raw:
+  <<: *gcs_storage
+  filepath: "gs://globant-tech/raw/departments/departments.csv"
+
+jobs_raw:
+  <<: *gcs_storage
+  filepath: "gs://globant-tech/raw/jobs/jobs.csv"
 
 hired_employees_db:
   <<: *hired_employees_dataset
